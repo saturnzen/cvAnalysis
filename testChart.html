@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <title>Test Charts</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:20px;}
+    .row{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;}
+    .card{border:1px solid #ddd;padding:12px;border-radius:8px;background:#fff;flex:1 1 400px;}
+    table{width:100%;border-collapse:collapse;}
+    td,th{padding:8px;border:1px solid #eee;vertical-align:top;}
+    h3{margin-top:0;}
+  </style>
+</head>
+<body>
+  <h1>Test Charts với dữ liệu mẫu</h1>
+  <button onclick="window.location.href='index.html'">⬅️ Quay về trang chính</button>
+  <div class="row">
+    <div class="card">
+      <h3>SWOT</h3>
+      <table>
+        <tr><th>Strengths</th><th>Weaknesses</th><th>Opportunities</th><th>Threats</th></tr>
+        <tr>
+          <td id="swotS"></td>
+          <td id="swotW"></td>
+          <td id="swotO"></td>
+          <td id="swotT"></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="card">
+      <h3>Eisenhower Matrix</h3>
+      <canvas id="eisenhowerChart" width="400" height="300"></canvas>
+    </div>
+    <div class="card">
+      <h3>ERRC</h3>
+      <table>
+        <tr><th>Eliminate</th><th>Reduce</th><th>Raise</th><th>Create</th></tr>
+        <tr>
+          <td id="errcE"></td>
+          <td id="errcR"></td>
+          <td id="errcRa"></td>
+          <td id="errcC"></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="card">
+      <h3>Blue Ocean Radar</h3>
+      <canvas id="blueOceanChart" width="600" height="400"></canvas>
+    </div>
+  </div>
+
+  <script type="module" src="./testChart.js"></script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>CV Analyzer</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    textarea { width: 100%; margin: 10px 0; }
+    #output { margin-top: 20px; padding: 10px; border: 1px solid #ccc; }
+    canvas { margin-top: 20px; max-width: 600px; }
+  </style>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <h1>CV Analyzer (Gemini API Demo)</h1>
+
+  <label>Upload CV (PDF):</label>
+  <input type="file" id="fileInput" accept="application/pdf">
+  <textarea id="resumeArea" rows="10" placeholder="CV text sẽ hiện ở đây..."></textarea>
+
+  <label>API Key (Gemini):</label>
+  <input type="password" id="apiKey" placeholder="Dán API Key vào đây">
+
+  <button id="analyzeBtn">Phân tích CV</button>
+
+  <div id="output"></div>
+  <button onclick="window.location.href='testChart.html'">⚙️ Test Chart</button>
+   <button onclick="window.location.href='testPrompt.html'">⚙️ Test Prompt</button>
+  
+    <div class="row">
+    <div class="card">
+      <h3>SWOT</h3>
+      <div class="tab-header" id="swotTabs">
+        <button data-col="swotS" class="active">Strengths</button>
+        <button data-col="swotW">Weaknesses</button>
+        <button data-col="swotO">Opportunities</button>
+        <button data-col="swotT">Threats</button>
+      </div>
+      <table>
+        
+        <tr>
+          <td id="swotS"></td>
+          <td id="swotW"></td>
+          <td id="swotO"></td>
+          <td id="swotT"></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="card">
+      <h3>ERRC</h3>
+      <div class="tab-header" id="errcTabs">
+        <button data-col="errcE" class="active">Eliminate</button>
+        <button data-col="errcR">Reduce</button>
+        <button data-col="errcRa">Raise</button>
+        <button data-col="errcC">Create</button>
+      </div>
+      <table>
+        <tr>
+          <td id="errcE"></td>
+          <td id="errcR"></td>
+          <td id="errcRa"></td>
+          <td id="errcC"></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+   <h3>Eisenhower Matrix</h3>
+  <canvas id="eisenhowerChart"></canvas>
+
+  <h3>Blue Ocean Strategy</h3>
+  <canvas id="blueOceanChart"></canvas>
+
+  <!-- pdf.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Prompts và Script -->
+  <script src="prompts.js" type="module"></script>
+  <script src="script.js" type="module"></script>
+</body>
+</html>

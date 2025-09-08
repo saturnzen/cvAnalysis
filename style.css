@@ -1,0 +1,9 @@
+<style>
+  .tab-header { display: flex; gap: 8px; margin-bottom: 6px; }
+  .tab-header button {
+    padding: 4px 10px; border: 1px solid #ccc; border-radius: 4px;
+    background: #f5f5f5; cursor: pointer;
+  }
+  .tab-header button.active { background: #0b6efd; color: white; border-color: #0b6efd; }
+  td { display: none; vertical-align: top; } /* mặc định ẩn tất cả cột */
+</style>

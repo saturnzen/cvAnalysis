@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Prompt</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    textarea, input { width: 100%; margin: 8px 0; padding: 6px; }
+    button { margin: 6px 0; padding: 6px 12px; }
+    #output { margin-top: 12px; white-space: pre-wrap; border: 1px solid #ccc; padding: 10px; }
+  </style>
+</head>
+<body>
+  <h1>⚙️ Test Prompt với CV</h1>
+
+  <label>API Key (Gemini):</label>
+  <input type="password" id="apiKey" placeholder="Dán API key">
+
+  <label>Prompt:</label>
+  <textarea id="promptInput" rows="6" placeholder="Nhập prompt ở đây..."></textarea>
+
+  <button id="runBtn">▶️ Chạy prompt</button>
+  <button onclick="window.location.href='index.html'">⬅️ Về Index</button>
+  <div id="status" style="margin-top:6px; font-style:italic; color:gray;"></div>
+
+  <div id="output"></div>
+
+
+  <!-- Script -->
+  <script type="module">
+    import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+    const runBtn = document.getElementById("runBtn");
+    const apiKeyEl = document.getElementById("apiKey");
+    const promptInput = document.getElementById("promptInput");
+    const outputEl = document.getElementById("output");
+
+    runBtn.addEventListener("click", async () => {
+      const apiKey = apiKeyEl.value.trim();
+      // const resume = localStorage.getItem("resumeText") || "";
+      const customPrompt = promptInput.value.trim();
+
+      if (!apiKey) {
+        alert("Nhập API key trước");
+        return;
+      }
+      // if (!resume) {
+      //   alert("Chưa có CV trong localStorage");
+      //   return;
+      // }
+      if (!customPrompt) {
+        alert("Nhập prompt trước");
+        return;
+      }
+
+      try {
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+        // const result = await model.generateContent(`${customPrompt}\n\nCV:\n${resume}`);
+        const result = await model.generateContent(`${customPrompt}`);
+        const text = await result.response.text();
+
+        outputEl.textContent = text;
+      } catch (err) {
+        console.error(err);
+        outputEl.textContent = "❌ Lỗi: " + err.message;
+      }
+    });
+
+    // chạy timeout
+    runBtn.addEventListener("click", async () => {
+  const apiKey = apiKeyEl.value.trim();
+  const customPrompt = promptInput.value.trim();
+  const statusEl = document.getElementById("status");
+
+  if (!apiKey) { alert("Nhập API key trước"); return; }
+  if (!customPrompt) { alert("Nhập prompt trước"); return; }
+
+  try {
+    // Hiển thị thời gian bắt đầu
+    const startTime = new Date();
+    statusEl.textContent = `⏳ Đang gửi request lúc ${startTime.toLocaleTimeString()}...`;
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+    const result = await model.generateContent(`${customPrompt}`);
+    const text = await result.response.text();
+
+    outputEl.textContent = text;
+
+    // Hiển thị thời gian hoàn thành
+    const endTime = new Date();
+    statusEl.textContent = `✅ Hoàn thành lúc ${endTime.toLocaleTimeString()} (tốn ${((endTime - startTime)/1000).toFixed(2)} giây)`;
+
+  } catch (err) {
+    console.error(err);
+    outputEl.textContent = "❌ Lỗi: " + err.message;
+    statusEl.textContent = ""; // reset trạng thái nếu lỗi
+  }
+});
+
+  </script>
+</body>
+</html>
