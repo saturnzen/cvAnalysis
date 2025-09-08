@@ -28,3 +28,26 @@ canvas{
   max-width: 100%;
   height: auto !important;
 }
+
+@media screen and (max-width: 438px) {
+    body {
+    font-size: 200%;
+    line-height: 1.6;}
+  
+    button {
+      font-size: 150%;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+  font-size: 100%;   /* kế thừa từ input/textarea */
+}
+input{
+  font-size: 150%;
+}
+
+canvas{
+  max-width: 100%;
+  height: auto !important;
+}
+}
