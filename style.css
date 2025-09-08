@@ -1,4 +1,4 @@
-<style>
+
   .tab-header { display: flex; gap: 8px; margin-bottom: 6px; }
   .tab-header button {
     padding: 4px 10px; border: 1px solid #ccc; border-radius: 4px;
@@ -6,4 +6,25 @@
   }
   .tab-header button.active { background: #0b6efd; color: white; border-color: #0b6efd; }
   td { display: none; vertical-align: top; } /* mặc định ẩn tất cả cột */
-</style>
+
+
+  body {
+    font-size: 200%;
+    line-height: 1.6;}
+  
+    button {
+      font-size: 150%;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+  font-size: 100%;   /* kế thừa từ input/textarea */
+}
+input{
+  font-size: 150%;
+}
+
+canvas{
+  max-width: 100%;
+  height: auto !important;
+}

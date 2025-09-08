@@ -90,7 +90,14 @@ function renderBlueOceanChart(obj) {
         borderColor: "blue"
       }]
     },
-    options: { scales: { r: { min: 0, max: 10 } } }
+    options: { scales: { r: { min: 0, max: 10 ,
+      pointLabels: {
+            font: {
+              size: 32   // 🔥 chữ xung quanh (label của trục)
+            }
+          }
+      
+    } } }
   });
 }
 

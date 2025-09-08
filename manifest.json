@@ -1,6 +1,6 @@
 {
-    "name": "Phân tích cv",
-    "short_name": "phân tích cv",
+    "name": "cvAnalysis with Gemini",
+    "short_name": "cvAnalysis",
     "icons": [
         {
             "src": "icons/192.png",
