@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Candidate Evaluation</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 650px; }
+    th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: center; }
+    th { background: #f0f0f0; }
+    td.label { text-align: left; }
+    input { width: 100px; text-align: center; }
+    button { margin-top: 12px; padding: 6px 12px; cursor: pointer; }
+
+    body {
+      transform: scale(1.5); /* 1.2 = 120% */
+      transform-origin: 0 0; /* cố định góc trái trên */
+      }
+  </style>
+  
+</head>
+<body>
+  <h2>Candidate Evaluation</h2>
+  
+  <button onclick="window.location.href='index.html'">⬅️ Về Index</button>
+  <table>
+    <tr>
+      <th>Tiêu chí</th>
+      <th>Điểm ứng viên</th>
+      <th>Max</th>
+    </tr>
+    <tr>
+      <td class="label">Đơn giản</td>
+      <td><input type="number" id="simplicity"min="0" max="5" step="1" value="5"></td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td class="label">Thuận tiện</td>
+      <td><input type="number" id="convenience"min="0" max="5" step="1" value="5"></td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td class="label">Rủi ro</td>
+      <td><input type="number" id="risk"min="-5" max="0" step="1" value="-3"></td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td class="label">Sự thú vị và hình ảnh</td>
+      <td><input type="number" id="attractiveness"min="0" max="5" step="1" value="5"></td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td class="label">Bảo vệ môi trường</td>
+      <td><input type="number" id="ecoFriendly"min="0" max="5" step="1" value="1"></td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td class="label"><b>Beta</b></td>
+      <td id="beta">0.84</td>
+      <td></td>
+    </tr>
+
+    <tr>
+      <td class="label">Lương ứng viên</td>
+      <td>
+        <input type="number" id="salaryCandidate" value="10000000" hidden>
+        <input type="text" id="salaryCandidateDisplay" value="10.000.000 ₫">
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td class="label">Lương thị trường</td>
+      <td>
+        <input type="number" id="salaryMarket" value="10000000" hidden>
+        <input type="text" id="salaryMarketDisplay" value="10.000.000 ₫">
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td class="label">Hiệu suất ứng viên</td>
+      <td><input type="number" id="performanceCandidate" value="100"></td>
+      <td>%</td>
+    </tr>
+    <tr>
+      <td class="label">Hiệu suất kỳ vọng</td>
+      <td><input type="number" id="performanceExpected" value="100"></td>
+      <td>%</td>
+    </tr>
+    <tr>
+      <td class="label"><b>Mức độ tương thích</b></td>
+      <td id="compatibility">0.84</td>
+      <td></td>
+    </tr>
+  </table>
+
+  <button onclick="recalculate()">🔄 Tính lại</button>
+
+  <h3>📌 Công thức</h3>
+  <pre>
+Beta = SUM(điểm ứng viên) / SUM(Max có điểm ứng viên khác 0)
+
+Mức tương thích = (Lương ứng viên * Beta / Lương thị trường) / (Hiệu suất ứng viên / Hiệu suất kỳ vọng)
+  </pre>
+
+  <script>
+    function recalculate() {
+      // Lấy dữ liệu điểm
+      const scores = [
+        parseFloat(document.getElementById("simplicity").value) || 0,
+        parseFloat(document.getElementById("convenience").value) || 0,
+        parseFloat(document.getElementById("risk").value) || 0,
+        parseFloat(document.getElementById("attractiveness").value) || 0,
+        parseFloat(document.getElementById("ecoFriendly").value) || 0
+      ];
+      const maxScores = [5, 5, 0, 5, 5];
+
+      // Tính Beta
+      const sumScores = scores.reduce((a, b) => a + b, 0);
+      const sumMax = maxScores.filter((m, i) => scores[i] !== 0).reduce((a, b) => a + b, 0);
+      const beta = sumMax > 0 ? (sumScores / sumMax).toFixed(2) : 0;
+      document.getElementById("beta").textContent = beta;
+
+      // Lấy dữ liệu lương + hiệu suất
+      const salaryCandidate = parseFloat(document.getElementById("salaryCandidate").value) || 0;
+      const salaryMarket = parseFloat(document.getElementById("salaryMarket").value) || 1; // tránh chia 0
+      const perfCandidate = parseFloat(document.getElementById("performanceCandidate").value) || 0;
+      const perfExpected = parseFloat(document.getElementById("performanceExpected").value) || 1;
+
+      // Tính mức độ tương thích theo công thức
+      // (B11*B7/B12)/(B11/B12) -> (lương thị trường * lương ứng viên / hiệu suất kỳ vọng) / (lương thị trường / hiệu suất kỳ vọng)
+      const compatibility = (((salaryMarket*beta)/ salaryCandidate) / (perfExpected / perfCandidate)).toFixed(2);
+      document.getElementById("compatibility").textContent = compatibility;
+    }
+
+    // Tính lại lần đầu
+  function reDisplaySalary(salaryRawId, salaryDisplayId) {
+  const raw = document.getElementById(salaryRawId);
+  const display = document.getElementById(salaryDisplayId);
+
+  // Khi người dùng nhập
+  display.addEventListener("input", () => {
+    let val = display.value.replace(/[^\d]/g, "");
+    raw.value = val;
+  });
+
+  // Khi người dùng rời ô input
+  display.addEventListener("blur", () => {
+    if (raw.value) {
+      display.value = new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND"
+      }).format(raw.value);
+    }
+  });
+}
+
+// Gắn cho 2 input lương
+reDisplaySalary("salaryCandidate", "salaryCandidateDisplay");
+reDisplaySalary("salaryMarket", "salaryMarketDisplay");
+  </script>
+</body>
+</html>
