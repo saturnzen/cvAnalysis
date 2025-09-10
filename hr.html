@@ -2,6 +2,8 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Candidate Evaluation</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
@@ -11,11 +13,87 @@
     td.label { text-align: left; }
     input { width: 100px; text-align: center; }
     button { margin-top: 12px; padding: 6px 12px; cursor: pointer; }
+@media screen and (max-width: 1600px){
 
-    body {
-      transform: scale(1.5); /* 1.2 = 120% */
+  body {
+    transform: scale(1.5); /* 1.2 = 120% */
+    transform-origin: 0 0; /* cố định góc trái trên */
+    }
+}
+
+@media screen and (max-width: 936px){
+
+  body {
+    transform: scale(1.25); /* 1.2 = 120% */
+    transform-origin: 0 0; /* cố định góc trái trên */
+    }
+}
+
+@media screen and (max-width: 769px){
+
+  body {
+    transform: scale(1.1); /* 1.2 = 120% */
+    transform-origin: 0 0; /* cố định góc trái trên */
+    }
+}
+    @media screen and (max-width: 438px) {
+      body {
+  font-family: Arial, sans-serif;
+  margin: 10px;
+  transform: scale(1.0); /* 1.2 = 120% */
       transform-origin: 0 0; /* cố định góc trái trên */
-      }
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%; /* co giãn theo màn hình */
+  max-width: 650px; /* trên màn lớn thì giữ nguyên */
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px 6px;
+  text-align: center;
+  font-size: 14px; /* chữ nhỏ gọn hơn trên mobile */
+}
+
+th {
+  background: #f0f0f0;
+}
+
+td.label {
+  text-align: left;
+}
+
+input {
+  width: 100%; 
+  box-sizing: border-box; 
+  text-align: center;
+  font-size: 14px;
+}
+
+button {
+  margin-top: 12px;
+  padding: 10px 16px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: none;
+  background: #007aff;
+  color: white;
+  cursor: pointer;
+}
+
+button:active {
+  background: #005bb5;
+}
+table {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+      
+    }
   </style>
   
 </head>
