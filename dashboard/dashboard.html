@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mini Break-even Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#3ddc84; --danger:#ff6b6b;
+      --glass: rgba(255,255,255,0.03);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#061021 0%, #071226 100%);color:#e6eef6}
+    .app{max-width:1100px;margin:28px auto;padding:20px;display:grid;grid-template-columns:260px 1fr;gap:20px}
+    .sidebar{background:var(--card);padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,.6)}
+    .brand{font-weight:700;font-size:18px;margin-bottom:10px}
+    .nav{display:flex;flex-direction:column;gap:8px}
+    .nav button{background:transparent;border:0;color:var(--muted);padding:10px;border-radius:8px;text-align:left;cursor:pointer}
+    .nav button.active{color:var(--accent);background:linear-gradient(90deg, rgba(61,220,132,0.06), transparent)}
+    .card{background:var(--card);padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,.6)}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+    .big{grid-column:span 2}
+    .kpi{display:flex;flex-direction:column;gap:6px}
+    .kpi .value{font-size:20px;font-weight:700}
+    .muted{color:var(--muted);font-size:13px}
+    .controls{display:flex;gap:8px;flex-wrap:wrap}
+    input[type="number"], input[type="text"], select{
+      background:var(--glass);border:1px solid rgba(255,255,255,0.03);color:inherit;padding:8px;border-radius:8px;width:100%;
+    }
+    label{font-size:13px;color:var(--muted)}
+    .row{display:flex;gap:10px}
+    .btn{background:var(--accent);border:0;color:#021018;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600}
+    .btn.ghost{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.03)}
+    footer{grid-column:1/-1;color:var(--muted);font-size:13px;margin-top:10px;text-align:center}
+    .status{padding:8px;border-radius:8px;font-weight:700;display:inline-block}
+    .ok{background:rgba(61,220,132,0.12);color:var(--accent)}
+    .nok{background:rgba(255,107,107,0.12);color:var(--danger)}
+    .small{font-size:12px;color:var(--muted)}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{padding:6px;text-align:left;border-bottom:1px dashed rgba(255,255,255,0.03)}
+    .muted-sm{color:var(--muted);font-size:12px}
+    @media (max-width:900px){
+      .app{grid-template-columns:1fr; padding:12px}
+      .grid{grid-template-columns:1fr}
+      .big{grid-column:span 1}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar card">
+      <div class="brand">BE Dashboard — vì tiền không tự sinh</div>
+      <div class="muted-sm">Theo dõi điểm hòa vốn hàng ngày, tích lũy và xu hướng.</div>
+      <nav class="nav" style="margin-top:14px">
+        <button id="nav-home" class="active">Trang chủ</button>
+        <button id="nav-settings">Thông số</button>
+        <button id="nav-history">Lịch sử</button>
+        <button id="nav-index">cvAnalysis with Gemini</button>
+      </nav>
+      <hr style="border:0;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0">
+      <div class="small muted-sm">Ngày hiện tại: <span id="todayLabel"></span></div>
+      <div style="margin-top:10px" class="small muted-sm">Dữ liệu lưu trong trình duyệt. Muốn sao lưu? Export lịch sử.</div>
+    </aside>
+
+    <main>
+      <!-- HOME -->
+      <section id="page-home">
+        <div class="grid">
+          <div class="card kpi">
+            <div class="muted">Đơn vị hòa vốn (sản phẩm) — hôm nay</div>
+            <div class="value" id="beUnitsToday">—</div>
+            <div class="muted-sm">(Đã cộng hòa vốn tích luỹ nếu có)</div>
+          </div>
+
+          <div class="card kpi">
+            <div class="muted">Doanh thu hòa vốn (VND) — hôm nay</div>
+            <div class="value" id="beRevenueToday">—</div>
+            <div class="muted-sm">bao gồm carryover nếu còn thiếu từ hôm trước</div>
+          </div>
+
+          <div class="card kpi">
+            <div class="muted">Doanh thu thực tế — hôm nay</div>
+            <div class="value" id="actualRevenue">—</div>
+            <div class="muted-sm">Cập nhật bằng form bên dưới</div>
+          </div>
+
+          <div class="card big">
+            <canvas id="mainChart" height="160"></canvas>
+          </div>
+
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div class="muted">Hòa vốn tích luỹ (từ hôm trước)</div>
+                <div class="value" id="carryoverLabel">0</div>
+              </div>
+            </div>
+
+            <hr style="border:0;border-top:1px solid rgba(255,255,255,0.03);margin:10px 0">
+
+            <div class="muted">Nhập doanh số hôm nay</div>
+            <div style="margin-top:8px" class="row">
+              <div style="flex:1">
+                <label class="small">Số sản phẩm bán</label>
+                <input id="inputUnits" type="number" min="0" step="1" value="0">
+              </div>
+              <div style="width:120px">
+                <label class="small">Giá bán (₫)</label>
+                <input id="inputPrice" type="number" min="0" step="100" value="0">
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <button class="btn" id="saveTodayBtn">Lưu doanh số hôm nay</button>
+              <button class="btn ghost" id="resetTodayBtn">Reset hôm nay</button>
+            </div>
+
+            <div style="margin-top:10px" class="small muted-sm">
+              Trạng thái: <span id="statusToday" class="status">—</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section id="page-settings" style="display:none">
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">Thông số</h3>
+          <div class="muted-sm">Nhập chi phí và giá — dùng để tính hòa vốn.</div>
+
+          <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <label>Chi phí cố định (₫ / tháng)</label>
+              <input id="fixedMonthly" type="number" value="3000000" min="0" step="1000">
+            </div>
+            <div>
+              <label>Số ngày / kỳ (dùng để chia fixed)</label>
+              <input id="daysPerPeriod" type="number" value="30" min="1" step="1">
+            </div>
+            <div>
+              <label>Chi phí biến đổi / sản phẩm (₫)</label>
+              <input id="varPerUnit" type="number" value="10000" min="0" step="100">
+            </div>
+            <div>
+              <label>Giá bán mặc định / sản phẩm (₫)</label>
+              <input id="priceDefault" type="number" value="25000" min="0" step="100">
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn" id="saveSettingsBtn">Lưu thông số</button>
+            <button class="btn ghost" id="exportCsvBtn">Export CSV</button>
+            <button class="btn ghost" id="clearAllBtn" title="Xóa toàn bộ lịch sử (không hoàn tác)">Xóa dữ liệu</button>
+          </div>
+
+          <div style="margin-top:12px" class="muted-sm">
+            Ghi chú: công thức dùng BE = FixedDaily / (Price - VarCostPerUnit). Nếu Price = VarCostPerUnit thì hòa vốn đơn vị vô hạn. Chỉnh phù hợp thực tế.
+          </div>
+        </div>
+      </section>
+
+      <!-- HISTORY -->
+      <section id="page-history" style="display:none">
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">Lịch sử gần nhất</h3>
+          <div class="muted-sm">Bảng ghi nhận ngày — units, doanh thu, BE (₫), carryover tiếp theo.</div>
+          <div style="margin-top:12px;overflow:auto;max-height:420px">
+            <table id="historyTable">
+              <thead><tr><th>Ngày</th><th>Units</th><th>Doanh thu (₫)</th><th>BE (₫)</th><th>Carryover tới ngày tiếp</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <footer>Được tạo cho bạn (miễn phí, nhưng đừng bắt tôi trả tiền tình cảm)</footer>
+    </main>
+  </div>
+
+<script>
+/* ======= Helper / Storage ======= */
+const KEY_SETTINGS = 'be_settings_v1';
+const KEY_RECORDS = 'be_records_v1';
+
+function readSettings(){
+  const s = JSON.parse(localStorage.getItem(KEY_SETTINGS) || '{}');
+  return Object.assign({
+    fixedMonthly: 3000000,
+    daysPerPeriod: 30,
+    varPerUnit: 10000,
+    priceDefault: 25000
+  }, s);
+}
+function saveSettings(obj){
+  localStorage.setItem(KEY_SETTINGS, JSON.stringify(obj));
+}
+function readRecords(){
+  return JSON.parse(localStorage.getItem(KEY_RECORDS) || '[]');
+}
+function saveRecords(records){
+  localStorage.setItem(KEY_RECORDS, JSON.stringify(records));
+}
+function todayISO(){
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+function fmt(num){
+  return new Intl.NumberFormat('vi-VN').format(Math.round(num));
+}
+
+/* ======= Core BE logic ======= */
+/* BE units = FixedDaily / (Price - VarCost)
+   BE revenue = BE_units * Price
+   carryover (VND) = max(0, BE_revenue - revenue_actual)
+*/
+function computeBEForDay(settings, carryoverRevenue=0){
+  const fixedDaily = settings.fixedMonthly / Math.max(1, settings.daysPerPeriod);
+  const marginPerUnit = settings.priceDefault - settings.varPerUnit;
+  if(marginPerUnit <= 0) {
+    return {beUnits: Infinity, beRevenue: Infinity, fixedDaily, marginPerUnit};
+  }
+  // convert carryover in revenue to equivalent units needed (consider margin)
+  const carryUnits = carryoverRevenue / marginPerUnit;
+  const beUnits = fixedDaily / marginPerUnit + carryUnits;
+  const beRevenue = beUnits * settings.priceDefault;
+  return {beUnits, beRevenue, fixedDaily, marginPerUnit};
+}
+
+/* ======= UI wiring ======= */
+const el = id => document.getElementById(id);
+
+// Navigation
+el('nav-home').onclick = () => showPage('home');
+el('nav-settings').onclick = () => showPage('settings');
+el('nav-history').onclick = () => showPage('history');
+el('nav-index').onclick = () => window.location.href='../index.html';
+
+function showPage(p){
+  document.querySelectorAll('#page-home, #page-settings, #page-history').forEach(sec => sec.style.display = 'none');
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+  if(p === 'home'){ el('page-home').style.display='block'; el('nav-home').classList.add('active'); }
+  if(p === 'settings'){ el('page-settings').style.display='block'; el('nav-settings').classList.add('active'); }
+  if(p === 'history'){ el('page-history').style.display='block'; el('nav-history').classList.add('active'); }
+  renderAll();
+}
+
+/* ======= Day change logic & carryover handling ======= */
+function ensureTodayRecord(){
+  const records = readRecords();
+  const today = todayISO();
+  let last = records.length? records[records.length-1] : null;
+
+  // if last record isn't today, create today's record using carryover from last
+  if(!last || last.date !== today){
+    const settings = readSettings();
+    let carry = 0;
+    if(last){
+      carry = Math.max(0, last.beRevenue - last.revenueActual);
+    }
+    const be = computeBEForDay(settings, carry);
+    const rec = {
+      date: today,
+      units: 0,
+      priceUsed: settings.priceDefault,
+      revenueActual: 0,
+      beUnits: be.beUnits === Infinity ? null : be.beUnits,
+      beRevenue: be.beRevenue === Infinity ? null : be.beRevenue,
+      carryFromPrev: carry,
+      carryToNext: null
+    };
+    records.push(rec);
+    saveRecords(records);
+  } else {
+    // existing today's BE might need update if settings changed; recompute with stored carryFromPrev
+    const settings = readSettings();
+    const be = computeBEForDay(settings, last.carryFromPrev || 0);
+    last.beUnits = be.beUnits === Infinity ? null : be.beUnits;
+    last.beRevenue = be.beRevenue === Infinity ? null : be.beRevenue;
+    saveRecords(records);
+  }
+}
+
+/* ======= Render / Chart ======= */
+let mainChart = null;
+function renderAll(){
+  el('todayLabel').textContent = todayISO();
+  ensureTodayRecord();
+  const settings = readSettings();
+  el('fixedMonthly').value = settings.fixedMonthly;
+  el('daysPerPeriod').value = settings.daysPerPeriod;
+  el('varPerUnit').value = settings.varPerUnit;
+  el('priceDefault').value = settings.priceDefault;
+
+  const records = readRecords();
+  const today = todayISO();
+  const todayRec = records.find(r => r.date===today);
+  const carry = todayRec ? (todayRec.carryFromPrev||0) : 0;
+
+  el('carryoverLabel').textContent = fmt(carry) + ' ₫';
+  el('beUnitsToday').textContent = todayRec && todayRec.beUnits ? fmt(todayRec.beUnits.toFixed(2)) + ' sp' : '—';
+  el('beRevenueToday').textContent = todayRec && todayRec.beRevenue ? fmt(todayRec.beRevenue) + ' ₫' : '—';
+  el('actualRevenue').textContent = todayRec ? fmt(todayRec.revenueActual) + ' ₫' : '—';
+
+  // status
+  if(todayRec){
+    const ok = todayRec.revenueActual >= (todayRec.beRevenue || Infinity);
+    el('statusToday').textContent = (todayRec.beRevenue===null ? 'Margin không hợp lệ' : ok ? 'Đạt' : 'Chưa đạt');
+    el('statusToday').className = 'status ' + (ok ? 'ok' : 'nok');
+  } else {
+    el('statusToday').textContent = '—';
+    el('statusToday').className = 'status';
+  }
+
+  // set inputs default
+  el('inputUnits').value = todayRec ? todayRec.units : 0;
+  el('inputPrice').value = todayRec ? todayRec.priceUsed : settings.priceDefault;
+
+  // history table
+  const tbody = document.querySelector('#historyTable tbody');
+  tbody.innerHTML = '';
+  const last30 = records.slice(-60).reverse(); // show up to 60 days (latest first)
+  for(const r of last30){
+    const tr = document.createElement('tr');
+    const carryNext = r.carryToNext ? fmt(r.carryToNext)+' ₫' : '-';
+    tr.innerHTML = `<td>${r.date}</td>
+      <td>${r.units}</td>
+      <td>${fmt(r.revenueActual)} ₫</td>
+      <td>${r.beRevenue ? fmt(r.beRevenue)+' ₫' : '—'}</td>
+      <td>${carryNext}</td>`;
+    tbody.appendChild(tr);
+  }
+
+  // chart: build arrays for last N days (30)
+  const N = 30;
+  const days = [];
+  const salesBars = [];
+  const beLine = [];
+  const monthlyLine = [];
+  const yearlyLine = [];
+  const cumLine = [];
+  let cum = 0;
+  const recsForChart = records.slice(-N);
+  // if less than N, pad past days with zeros
+  const pad = Math.max(0, N - recsForChart.length);
+  for(let i=pad-1;i>=0;i--){
+    const d = new Date();
+    d.setDate(d.getDate() - (pad - i));
+    days.push(d.toISOString().slice(0,10));
+    salesBars.push(0);
+    beLine.push(null);
+    monthlyLine.push(settings.fixedMonthly / settings.daysPerPeriod);
+    yearlyLine.push((settings.fixedMonthly * 12) / 365);
+    cumLine.push(0);
+  }
+  for(const r of recsForChart){
+    days.push(r.date);
+    salesBars.push(r.revenueActual || 0);
+    beLine.push(r.beRevenue || null);
+    monthlyLine.push(settings.fixedMonthly / settings.daysPerPeriod);
+    yearlyLine.push((settings.fixedMonthly * 12) / 365);
+    cum += (r.revenueActual || 0);
+    cumLine.push(cum);
+  }
+
+  renderChart(days, salesBars, beLine, monthlyLine, yearlyLine, cumLine);
+}
+
+/* Chart.js */
+function renderChart(labels, salesBars, beLine, monthlyLine, yearlyLine, cumLine){
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  if(mainChart) mainChart.destroy();
+  mainChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { type: 'bar', label: 'Doanh số ngày (₫)', data: salesBars, yAxisID:'y', borderRadius:4, barThickness:12 },
+        { type: 'line', label: 'Hòa vốn (ngày) ₫', data: beLine, borderWidth:2, tension:0.25, yAxisID:'y', pointRadius:3 },
+        { type: 'line', label: 'Hòa vốn (tháng ->/ngày) ₫', data: monthlyLine, borderWidth:1, borderDash:[6,4], yAxisID:'y', pointRadius:0 },
+        { type: 'line', label: 'Hòa vốn (năm ->/ngày) ₫', data: yearlyLine, borderWidth:1, borderDash:[3,3], yAxisID:'y', pointRadius:0 },
+        { type: 'line', label: 'Doanh số tích luỹ (₫)', data: cumLine, borderWidth:2, yAxisID:'y2', tension:0.2, pointRadius:2 }
+      ]
+    },
+    options: {
+      interaction:{mode:'index', intersect:false},
+      stacked:false,
+      plugins:{
+        legend:{labels:{color:'#cfe9ff'}},
+        tooltip:{callbacks:{
+          label: ctx => {
+            const v = ctx.parsed.y || ctx.parsed;
+            if(v === null) return ctx.dataset.label + ': —';
+            return ctx.dataset.label + ': ' + new Intl.NumberFormat('vi-VN').format(Math.round(v)) + ' ₫';
+          }
+        }}
+      },
+      scales:{
+        x:{ ticks:{color:'#cbd5e1'}},
+        y:{ type:'linear', position:'left', ticks:{callback: v => (v>=1000? (v/1000)+'k':v), color:'#cbd5e1'}, grid:{color:'rgba(255,255,255,0.03)'} },
+        y2:{ type:'linear', position:'right', grid:{display:false}, ticks:{color:'#cbd5e1'}, offset:true}
+      }
+    }
+  });
+}
+
+/* ======= Events ======= */
+el('saveSettingsBtn').onclick = () => {
+  const s = {
+    fixedMonthly: Number(el('fixedMonthly').value) || 0,
+    daysPerPeriod: Number(el('daysPerPeriod').value) || 30,
+    varPerUnit: Number(el('varPerUnit').value) || 0,
+    priceDefault: Number(el('priceDefault').value) || 0
+  };
+  saveSettings(s);
+  // recompute today's BE
+  const records = readRecords();
+  if(records.length){
+    const last = records[records.length-1];
+    const be = computeBEForDay(s, last.carryFromPrev || 0);
+    last.beUnits = be.beUnits === Infinity ? null : be.beUnits;
+    last.beRevenue = be.beRevenue === Infinity ? null : be.beRevenue;
+    saveRecords(records);
+  }
+  renderAll();
+  alert('Đã lưu thông số. Tôi hi vọng bạn nhập đúng số chứ không phải đoán mò.');
+};
+
+el('saveTodayBtn').onclick = () => {
+  const units = Math.max(0, Number(el('inputUnits').value) || 0);
+  const price = Math.max(0, Number(el('inputPrice').value) || 0);
+  const records = readRecords();
+  const today = todayISO();
+  const rec = records.find(r=>r.date===today);
+  if(!rec){
+    alert('Không tìm bản ghi hôm nay. Tự tạo lại...');
+    ensureTodayRecord();
+  }
+  const rec2 = readRecords().find(r=>r.date===today);
+  rec2.units = units;
+  rec2.priceUsed = price;
+  rec2.revenueActual = units * price;
+  // compute carryover to next
+  if(rec2.beRevenue === null){
+    rec2.carryToNext = null;
+  } else {
+    rec2.carryToNext = Math.max(0, rec2.beRevenue - rec2.revenueActual);
+  }
+  saveRecords(readRecords());
+  renderAll();
+};
+
+el('resetTodayBtn').onclick = () => {
+  const records = readRecords();
+  const today = todayISO();
+  const idx = records.findIndex(r=>r.date===today);
+  if(idx>=0){
+    records[idx].units = 0;
+    records[idx].priceUsed = readSettings().priceDefault;
+    records[idx].revenueActual = 0;
+    records[idx].carryToNext = null;
+    saveRecords(records);
+    renderAll();
+  }
+};
+
+el('exportCsvBtn').onclick = () => {
+  const recs = readRecords();
+  if(!recs.length){ alert('Không có dữ liệu để export.'); return; }
+  let csv = 'date,units,price,revenue,beRevenue,carryFromPrev,carryToNext\n';
+  for(const r of recs){
+    csv += `${r.date},${r.units},${r.priceUsed},${r.revenueActual},${r.beRevenue||''},${r.carryFromPrev||0},${r.carryToNext||0}\n`;
+  }
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `be_history_${todayISO()}.csv`; document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+};
+
+el('clearAllBtn').onclick = () => {
+  if(!confirm('Xóa toàn bộ dữ liệu và settings? Hành động không thể hoàn tác.')) return;
+  localStorage.removeItem(KEY_RECORDS);
+  localStorage.removeItem(KEY_SETTINGS);
+  location.reload();
+};
+
+/* ======= Boot with example/demo data if empty ======= */
+function seedIfEmpty(){
+  if(!localStorage.getItem(KEY_SETTINGS)){
+    saveSettings(readSettings());
+  }
+  if(!localStorage.getItem(KEY_RECORDS)){
+    // seed last 12 days with semi-random data for demo
+    const s = readSettings();
+    const recs = [];
+    for(let i=12;i>=1;i--){
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const date = d.toISOString().slice(0,10);
+      const units = Math.max(0, Math.round(10 + Math.sin(i)*5 + Math.random()*8));
+      const revenue = units * s.priceDefault;
+      const carryPrev = recs.length? Math.max(0, recs[recs.length-1].beRevenue - recs[recs.length-1].revenueActual) : 0;
+      const be = computeBEForDay(s, carryPrev);
+      const beRev = be.beRevenue === Infinity ? null : be.beRevenue;
+      const carryToNext = beRev === null ? null : Math.max(0, beRev - revenue);
+      recs.push({date, units, priceUsed: s.priceDefault, revenueActual: revenue, beUnits: be.beUnits === Infinity ? null : be.beUnits, beRevenue: beRev, carryFromPrev: carryPrev, carryToNext});
+    }
+    saveRecords(recs);
+  }
+}
+
+/* ======= Init ======= */
+seedIfEmpty();
+showPage('home');
+renderAll();
+</script>
+</body>
+</html>
