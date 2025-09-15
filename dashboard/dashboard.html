@@ -40,11 +40,14 @@
     table{width:100%;border-collapse:collapse;font-size:13px}
     th,td{padding:6px;text-align:left;border-bottom:1px dashed rgba(255,255,255,0.03)}
     .muted-sm{color:var(--muted);font-size:12px}
+    #thongSo{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
     @media (max-width:900px){
       .app{grid-template-columns:1fr; padding:12px}
       .grid{grid-template-columns:1fr}
       .big{grid-column:span 1}
+      #thongSo{display: flex; flex-direction: column;}
     }
+    
   </style>
 </head>
 <body>
@@ -128,7 +131,7 @@
           <h3 style="margin:0 0 8px 0">Thông số</h3>
           <div class="muted-sm">Nhập chi phí và giá — dùng để tính hòa vốn.</div>
 
-          <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div id="thongSo" >
             <div>
               <label>Chi phí cố định (₫ / tháng)</label>
               <input id="fixedMonthly" type="number" value="3000000" min="0" step="1000">
@@ -177,7 +180,11 @@
     </main>
   </div>
 
+
 <script>
+
+
+  
 /* ======= Helper / Storage ======= */
 const KEY_SETTINGS = 'be_settings_v1';
 const KEY_RECORDS = 'be_records_v1';
