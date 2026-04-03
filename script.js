@@ -25,7 +25,7 @@ document.getElementById("fileInput").addEventListener("change", async (e) => {
 // Gọi Gemini API
 async function callGemini(apiKey, prompt, cvText) {
    const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         const result = await model.generateContent(`${prompt}\n\nCV:\n${cvText}`);
         const text = await result.response.text();
